@@ -25,22 +25,59 @@ function checksExistsUserAccount(request, response, next) {
 
 function checksCreateTodosUserAvailability(request, response, next) {
   const { user } = request;
-  
-  if(user.todos.lenght >= 10) {
-    if(!user.pro) {
-      return response.status(403).json({ error: "User already have 10 todos" });
+
+  if(user.pro || user.todos.length < 10) {
+    return next();
+  } else {
+    return response.status(403).json({ error: "User already have 10 todos" });
+  }
+    
+}
+
+function checksTodoExists(request, response, next) {
+  const { username } = request.headers;
+  const { id } = request.params;
+
+  const user = users.find(user => user.username === username);
+  const todo = user.todos.find(todo => todo.id === id);
+
+  if(!user) {
+    return response.status(404);
+  }
+
+  if(!validate.isUUID(id)) {
+    return response.status(400);
+  }
+
+  if(!todo) {
+    return response.status(404);
+  }
+
+  if(validate.isUUID(id)) {
+    if(user && todo) {
+      request.user = user;
+      request.todo = todo;
     }
   }
 
   return next();
-}
 
-function checksTodoExists(request, response, next) {
-  // Complete aqui
 }
 
 function findUserById(request, response, next) {
-  // Complete aqui
+  const { id } = request.params;
+
+  const user = users.find(user => user.id === id);
+
+  if(!user) {
+    return response.status(404);
+  }
+
+  if(user) {
+    request.user = user;
+  }
+
+  return next();
 }
 
 app.post('/users', (request, response) => {
